@@ -84,7 +84,7 @@ namespace GraphSystem2
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
-                            ProcDrawLine(drawArea, pen, point[0].X, point[0].Y, point[1].X, point[1].Y);
+                            DrawMyLine(drawArea, pen, point);
 
                             return;
                         default:
@@ -112,13 +112,41 @@ namespace GraphSystem2
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
-                            DrawBezie(drawArea,pen,point);
+                            DrawMyBezie(drawArea,pen,point);
 
                             return;
                         default:
                             pointCounter = 0;
                             return;
                     }
+                }
+                else if (figureChanger.SelectedItem == "Равнобедренный треугольник")
+                {
+                    switch(pointCounter)
+                    {
+                        case 0:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter++;
+                            return;
+                        case 1:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter++;
+                            return;
+                        case 2:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter = 0;
+                            drawArea = CreateGraphics();
+                            pen = new Pen((Color)figureColor.SelectedItem);
+                            //drawArea.SmoothingMode = SmoothingMode.HighQuality;
+                            DrawMyIsoScalesTriangle(drawArea, point);
+                            
+                            //drawArea.FillPolygon(brush, p);
+                            return;
+                        default:
+                            pointCounter = 0;
+                            return;
+                    }
+                    return;
                 }
             }
         }
@@ -131,16 +159,18 @@ namespace GraphSystem2
             }
         }
 
-        public void ProcDrawLine(Graphics drawArea, Pen pen, int x1, int y1, int x2, int y2)
+        public void DrawMyLine(Graphics drawArea, Pen pen, Point[] point)
         {
             drawArea = CreateGraphics();
             drawArea.SmoothingMode = SmoothingMode.HighQuality;
-            int x, y, dx, dy, Sx = 0, Sy = 0;
+            int dx, dy, Sx = 0, Sy = 0;
+            Point pXY;
             int F = 0, Fx = 0, dFx = 0, Fy = 0, dFy = 0;
-            dx = x2 - x1;
-            dy = y2 - y1;
+            dx = point[1].X - point[0].X;
+            dy = point[1].Y - point[0].Y;
             bool tr = true;
-            Sx = Math.Sign(dx); Sy = Math.Sign(dy);
+            Sx = Math.Sign(dx); 
+            Sy = Math.Sign(dy);
             if (Sx > 0)
                 dFx = dy;
             else
@@ -149,8 +179,9 @@ namespace GraphSystem2
                 dFy = dx;
             else
                 dFy = -dx;
-            x = x1;
-            y = y1;
+            //x = x1;
+            //y = y1;
+            pXY = point[0];
             F = 0;
             if (Math.Abs(dx) >= Math.Abs(dy))
             {
@@ -158,56 +189,84 @@ namespace GraphSystem2
                 do
                 {
                     //Вывести пиксель с координатами х, у
-                    Draw(drawArea, pen, x, y);
-                    if (x == x2)
+                    Draw(drawArea, pen, pXY);
+                    if (pXY.X == point[1].X)//(x == x2)
                         break;
                     Fx = F + dFx;
                     F = Fx - dFy;
-                    x = x + Sx;
+                    pXY.X = pXY.X + Sx; //x = x + Sx;
                     if (Math.Abs(Fx) < Math.Abs(F))
                         F = Fx;
                     else
-                        y = y + Sy;
+                        pXY.Y = pXY.Y + Sy;//y = y + Sy;
                 } while (tr);
             }
             else // угол наклона > 45 градусов 
             {
                 do { //Вывести пиксель с координатами х, у
-                    Draw(drawArea, pen, x, y);
-                    if (y == y2)
+                    Draw(drawArea, pen, pXY);
+                    if (pXY.Y == point[1].Y)//(y == y2)
                         break;
                     Fy = F + dFy;
                     F = Fy - dFx;
-                    y = y + Sy;
+                    pXY.Y = pXY.Y + Sy;//y = y + Sy;
                     if (Math.Abs(Fy) < Math.Abs(F))
                         F = Fy;
-                    else x = x + Sx;
+                    else
+                        pXY.X = pXY.X + Sx;//x = x + Sx;
                 } while (tr);
             }
         }
 
         // Вывод точки (квадрата)
-        public void Draw(Graphics drawArea, Pen pen, int x, int y)
+        public void Draw(Graphics drawArea, Pen pen, Point point)
         {
-            drawArea.DrawRectangle(pen, x, y, thickness.SelectedIndex + 1, thickness.SelectedIndex + 1);
+            drawArea.DrawRectangle(pen, point.X, point.Y, thickness.SelectedIndex + 1, thickness.SelectedIndex + 1);
         }
 
-        public void DrawBezie(Graphics drawArea, Pen pen, Point[] point)
+        public void DrawMyBezie(Graphics drawArea, Pen pen, Point[] point)
         {
-            double[] pX = new double[100],
-                     pY = new double[100];
+            //double[] pX = new double[100],
+             //        pY = new double[100];
+            Point[] pXY = new Point[100];
+
             double del = 0.01;
             drawArea = CreateGraphics();
             for (int t = 0; t < 100; t++)
             {
-                pX[t] = Math.Pow((1 - t * del), 3) * point[0].X + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].X + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].X + t * t * t * Math.Pow(del, 3) * point[3].X;
-                pY[t] = Math.Pow((1 - t * del), 3) * point[0].Y + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].Y + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].Y + t * t * t * Math.Pow(del, 3) * point[3].Y;
+                pXY[t].X = (int)Math.Round(Math.Pow((1 - t * del), 3) * point[0].X + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].X + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].X + t * t * t * Math.Pow(del, 3) * point[3].X);
+                pXY[t].Y = (int)Math.Round(Math.Pow((1 - t * del), 3) * point[0].Y + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].Y + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].Y + t * t * t * Math.Pow(del, 3) * point[3].Y);
                 if (t != 0)
                 {
-                    ProcDrawLine(drawArea, pen, (int)pX[t - 1], (int)pY[t - 1], (int)pX[t], (int)pY[t]);
+                    //DrawMyLine(drawArea, pen, (int)pX[t - 1], (int)pY[t - 1], (int)pX[t], (int)pY[t]);
+                    DrawMyLine(drawArea, pen, new Point[] { pXY[t - 1], pXY[t] });
                 }
             }
             
+        }
+
+        public void DrawMyIsoScalesTriangle(Graphics graph, Point[] point)
+        {
+            int yFant;
+            int xFant;
+
+            //xFant = (int)(Math.Round((2 * p1.Y * p3.Y - Math.Pow(p1.X, 2) - Math.Pow(p1.Y, 2) + Math.Pow(p2.X, 2) + Math.Pow(p2.Y, 2) - 2 * p2.Y * p3.Y) / (2 * (p2.X - p1.X))));
+            xFant = (int)(Math.Round((2 * point[0].Y * point[2].Y - Math.Pow(point[0].X, 2) - Math.Pow(point[0].Y, 2) + Math.Pow(point[1].X, 2) + Math.Pow(point[1].Y, 2) - 2 * point[1].Y * point[2].Y) / (2 * (point[1].X - point[0].X))));
+            //yFant = (int)(Math.Round((2 * p2.X * p3.X - 2 * p1.X * p3.X + Math.Pow(p1.X, 2) + Math.Pow(p1.Y, 2) - Math.Pow(p2.X, 2) - Math.Pow(p2.Y, 2)) / (2 * (p1.Y - p2.Y))));
+            yFant = (int)(Math.Round((2 * point[1].X * point[2].X - 2 * point[0].X * point[2].X + Math.Pow(point[0].X, 2) + Math.Pow(point[0].Y, 2) - Math.Pow(point[1].X, 2) - Math.Pow(point[1].Y, 2)) / (2 * (point[0].Y - point[1].Y))));
+
+            if (Math.Abs(xFant - point[2].X) < Math.Abs(yFant - point[2].Y))
+            {
+                point[2].X = xFant;
+            }
+            else
+            {
+                point[2].Y = yFant;
+            }
+
+            DrawMyLine(drawArea, pen, new Point[] { point[0], point[1] });
+            DrawMyLine(drawArea, pen, new Point[] { point[1], point[2] });
+            DrawMyLine(drawArea, pen, new Point[] { point[2], point[0] });
         }
     }
 }
