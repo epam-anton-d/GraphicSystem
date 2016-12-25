@@ -36,7 +36,7 @@ namespace GraphSystem2
                 starTops.Items.Add(topCounter);
             }
 
-            point = new Point[3];
+            point = new Point[4];
             pointCounter = 0;
             var colors = new Color[] { Color.Blue, Color.Red, Color.Green };
             figureColor.Items.Clear();
@@ -86,6 +86,37 @@ namespace GraphSystem2
                             pen = new Pen((Color)figureColor.SelectedItem);
                             ProcDrawLine(drawArea, pen, point[0].X, point[0].Y, point[1].X, point[1].Y);
 
+                            return;
+                        default:
+                            pointCounter = 0;
+                            return;
+                    }
+                }
+                else if (figureChanger.SelectedItem == "Кривая Безье")
+                {
+                    switch (pointCounter)
+                    {
+                        case 0:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter++;
+                            return;
+                        case 1:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter++;
+                            return;
+                        case 2:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter++;
+                            return;
+                        case 3:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter = 0;
+                            pen = new Pen((Color)figureColor.SelectedItem);
+                            DrawBezie(drawArea,pen,point);
+
+                            return;
+                        default:
+                            pointCounter = 0;
                             return;
                     }
                 }
@@ -159,6 +190,24 @@ namespace GraphSystem2
         public void Draw(Graphics drawArea, Pen pen, int x, int y)
         {
             drawArea.DrawRectangle(pen, x, y, thickness.SelectedIndex + 1, thickness.SelectedIndex + 1);
+        }
+
+        public void DrawBezie(Graphics drawArea, Pen pen, Point[] point)
+        {
+            double[] pX = new double[100],
+                     pY = new double[100];
+            double del = 0.01;
+            drawArea = CreateGraphics();
+            for (int t = 0; t < 100; t++)
+            {
+                pX[t] = Math.Pow((1 - t * del), 3) * point[0].X + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].X + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].X + t * t * t * Math.Pow(del, 3) * point[3].X;
+                pY[t] = Math.Pow((1 - t * del), 3) * point[0].Y + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].Y + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].Y + t * t * t * Math.Pow(del, 3) * point[3].Y;
+                if (t != 0)
+                {
+                    ProcDrawLine(drawArea, pen, (int)pX[t - 1], (int)pY[t - 1], (int)pX[t], (int)pY[t]);
+                }
+            }
+            
         }
     }
 }

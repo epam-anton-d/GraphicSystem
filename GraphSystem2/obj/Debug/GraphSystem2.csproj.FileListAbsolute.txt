@@ -7,3 +7,12 @@ C:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.Properties.Resources.re
 C:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.csproj.GenerateResource.Cache
 C:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.exe
 C:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.pdb
+D:\EPAM\GraphSystem2\GraphSystem2\bin\Debug\GraphSystem2.exe.config
+D:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.exe
+D:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.pdb
+D:\EPAM\GraphSystem2\GraphSystem2\bin\Debug\GraphSystem2.exe
+D:\EPAM\GraphSystem2\GraphSystem2\bin\Debug\GraphSystem2.pdb
+D:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.csprojResolveAssemblyReference.cache
+D:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.Form1.resources
+D:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.Properties.Resources.resources
+D:\EPAM\GraphSystem2\GraphSystem2\obj\Debug\GraphSystem2.csproj.GenerateResource.Cache
