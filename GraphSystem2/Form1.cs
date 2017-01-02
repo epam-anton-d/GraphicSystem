@@ -23,6 +23,7 @@ namespace GraphSystem2
         Pen pen;
         Graphics drawArea;
 
+
         private void Form1_Load(object sender, EventArgs e)
         {
             this.Text = "Графические системы. Вариант №1";
@@ -138,16 +139,13 @@ namespace GraphSystem2
                             pointCounter = 0;
                             drawArea = CreateGraphics();
                             pen = new Pen((Color)figureColor.SelectedItem);
-                            //drawArea.SmoothingMode = SmoothingMode.HighQuality;
                             DrawMyIsoScalesTriangle(drawArea, point);
                             
-                            //drawArea.FillPolygon(brush, p);
                             return;
                         default:
                             pointCounter = 0;
                             return;
                     }
-                    return;
                 }
                 else if (figureChanger.SelectedItem == "Звезда")
                 {
@@ -327,8 +325,6 @@ namespace GraphSystem2
             int yMin = int.MaxValue,
                 yMax = int.MinValue,
                 x;
-                //b, k, x;
-
         
             for (int i = 0; i < point.Length; i++)
             {
