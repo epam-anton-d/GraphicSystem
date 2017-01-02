@@ -84,8 +84,8 @@ namespace GraphSystem2
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
+                            drawArea = CreateGraphics();
                             DrawMyLine(drawArea, pen, point);
-
                             return;
                         default:
                             pointCounter = 0;
@@ -112,8 +112,8 @@ namespace GraphSystem2
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
+                            drawArea = CreateGraphics();
                             DrawMyBezie(drawArea,pen,point);
-
                             return;
                         default:
                             pointCounter = 0;
@@ -134,6 +134,7 @@ namespace GraphSystem2
                             return;
                         case 2:
                             point[pointCounter] = new Point(e.X, e.Y);
+                            point[pointCounter + 1] = point[0];
                             pointCounter = 0;
                             drawArea = CreateGraphics();
                             pen = new Pen((Color)figureColor.SelectedItem);
@@ -148,21 +149,36 @@ namespace GraphSystem2
                     }
                     return;
                 }
+                else if (figureChanger.SelectedItem == "Звезда")
+                {
+                    switch(pointCounter)
+                    {
+                        case 0:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter++;
+                            return;
+                        case 1:
+                            point[pointCounter] = new Point(e.X, e.Y);
+                            pointCounter = 0;
+                            drawArea = CreateGraphics();
+                            pen = new Pen((Color)figureColor.SelectedItem);
+                            DrawMyStar(drawArea, pen, point[0], point[1], Convert.ToInt32(starTops.SelectedItem));
+                            return;
+                        default:
+                            pointCounter = 0;
+                            return;
+                    }
+                }
             }
         }
 
         private void figureColor_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (figureColor.Text == "Transparent")
-            {
-                return;
-            }
+
         }
 
         public void DrawMyLine(Graphics drawArea, Pen pen, Point[] point)
         {
-            drawArea = CreateGraphics();
-            drawArea.SmoothingMode = SmoothingMode.HighQuality;
             int dx, dy, Sx = 0, Sy = 0;
             Point pXY;
             int F = 0, Fx = 0, dFx = 0, Fy = 0, dFy = 0;
@@ -226,19 +242,15 @@ namespace GraphSystem2
 
         public void DrawMyBezie(Graphics drawArea, Pen pen, Point[] point)
         {
-            //double[] pX = new double[100],
-             //        pY = new double[100];
             Point[] pXY = new Point[100];
 
             double del = 0.01;
-            drawArea = CreateGraphics();
             for (int t = 0; t < 100; t++)
             {
                 pXY[t].X = (int)Math.Round(Math.Pow((1 - t * del), 3) * point[0].X + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].X + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].X + t * t * t * Math.Pow(del, 3) * point[3].X);
                 pXY[t].Y = (int)Math.Round(Math.Pow((1 - t * del), 3) * point[0].Y + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].Y + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].Y + t * t * t * Math.Pow(del, 3) * point[3].Y);
                 if (t != 0)
                 {
-                    //DrawMyLine(drawArea, pen, (int)pX[t - 1], (int)pY[t - 1], (int)pX[t], (int)pY[t]);
                     DrawMyLine(drawArea, pen, new Point[] { pXY[t - 1], pXY[t] });
                 }
             }
@@ -250,9 +262,7 @@ namespace GraphSystem2
             int yFant;
             int xFant;
 
-            //xFant = (int)(Math.Round((2 * p1.Y * p3.Y - Math.Pow(p1.X, 2) - Math.Pow(p1.Y, 2) + Math.Pow(p2.X, 2) + Math.Pow(p2.Y, 2) - 2 * p2.Y * p3.Y) / (2 * (p2.X - p1.X))));
             xFant = (int)(Math.Round((2 * point[0].Y * point[2].Y - Math.Pow(point[0].X, 2) - Math.Pow(point[0].Y, 2) + Math.Pow(point[1].X, 2) + Math.Pow(point[1].Y, 2) - 2 * point[1].Y * point[2].Y) / (2 * (point[1].X - point[0].X))));
-            //yFant = (int)(Math.Round((2 * p2.X * p3.X - 2 * p1.X * p3.X + Math.Pow(p1.X, 2) + Math.Pow(p1.Y, 2) - Math.Pow(p2.X, 2) - Math.Pow(p2.Y, 2)) / (2 * (p1.Y - p2.Y))));
             yFant = (int)(Math.Round((2 * point[1].X * point[2].X - 2 * point[0].X * point[2].X + Math.Pow(point[0].X, 2) + Math.Pow(point[0].Y, 2) - Math.Pow(point[1].X, 2) - Math.Pow(point[1].Y, 2)) / (2 * (point[0].Y - point[1].Y))));
 
             if (Math.Abs(xFant - point[2].X) < Math.Abs(yFant - point[2].Y))
@@ -264,9 +274,125 @@ namespace GraphSystem2
                 point[2].Y = yFant;
             }
 
-            DrawMyLine(drawArea, pen, new Point[] { point[0], point[1] });
-            DrawMyLine(drawArea, pen, new Point[] { point[1], point[2] });
-            DrawMyLine(drawArea, pen, new Point[] { point[2], point[0] });
+            for (int i = 1; i < point.Length; i++)
+            {
+                DrawMyLine(drawArea, pen, new Point[] { point[i - 1], point[i] });
+            }
+
+            FilUp(drawArea, new Pen((Color)figureColor.SelectedItem), point);
+        }
+
+        public void DrawMyStar(Graphics graph, Pen pen, Point center, Point p, int tops)
+        {
+            double radius = Math.Sqrt(Math.Pow((center.X - p.X), 2) + Math.Pow((center.Y - p.Y), 2));
+            tops *= 2;
+            Point[] point = new Point[tops + 1];
+            point[0].X = center.X;
+            point[0].Y = (int)Math.Round(center.Y - radius);
+
+            double alfa = 2 * Math.PI / tops;
+
+            for (int i = 1; i <= ((point.Length - 1) / 2); i++)
+            {
+                if (i % 2 == 0)
+                {
+                    point[i].X = (int)Math.Round(center.X + radius * Math.Sin(i * alfa));
+                    point[i].Y = (int)Math.Round(center.Y - radius * Math.Cos(i * alfa));
+                }
+                else
+                {
+                    point[i].X = (int)Math.Round(center.X + radius * Math.Sin(i * alfa) / 2);
+                    point[i].Y = (int)Math.Round(center.Y - radius * Math.Cos(i * alfa) / 2);
+                }
+                if (point.Length - 1 - i == i)
+                {
+                    continue;
+                }
+                point[point.Length - 1 - i].X = 2 * center.X - point[i].X;
+                point[point.Length - 1 - i].Y = point[i].Y;
+            }
+
+            point[point.Length - 1] = point[0];
+
+            for (int i = 1; i < point.Length; i++)
+            {
+                DrawMyLine(drawArea, pen, new Point[] { point[i - 1], point[i] });
+            }
+
+            FilUp(drawArea, new Pen((Color)figureColor.SelectedItem), point);
+        }
+
+        public void FilUp(Graphics drawArea, Pen pen, Point[] point)
+        {
+            int yMin = int.MaxValue,
+                yMax = int.MinValue,
+                x;
+                //b, k, x;
+
+        
+            for (int i = 0; i < point.Length; i++)
+            {
+                if (point[i].Y < yMin)
+                {
+                    yMin = point[i].Y;
+                }
+                if (point[i].Y > yMax)
+                {
+                    yMax = point[i].Y;
+                }
+            }
+        
+            List<int>[] line = new List<int>[yMax - yMin - 1]; // over flow
+            double[] b = new double[point.Length - 1];
+            double[] k = new double[point.Length - 1];
+            int dx;
+
+            for (int i = 1; i < point.Length; i++)
+            {
+                dx = point[i].X - point[i - 1].X;
+
+                if (dx == 0)
+                {
+                    dx = 1;
+                }
+
+                b[i - 1] = ((point[i - 1].Y - point[i].Y * point[i - 1].X / point[i].X) * point[i].X) / dx; // divide by zero
+                k[i - 1] = (point[i].Y - b[i - 1]) / point[i].X;
+            }
+            
+            for (int y = yMin + 1; y < yMax; y++)
+			{
+			    for (int j = 0; j < point.Length - 1; j++)
+			    {
+                    if (((y > point[j].Y) && (y < point[j + 1].Y)) || ((y < point[j].Y) && (y > point[j + 1].Y)))
+                    {
+                        x = (int)Math.Round((y - b[j]) / k[j]);
+
+                        if (line[y - yMin - 1] == null)
+                        {
+                            line[y - yMin - 1] = new List<int>();
+                            line[y - yMin - 1].Add(x);
+                        }
+                        else
+                        {
+                            line[y - yMin - 1].Add(x);
+                        }
+
+                        line[y - yMin - 1].Sort();
+                    }
+			    }
+
+                if (line[y - yMin - 1] != null)
+                {
+                    for (int i = 1; i < line[y - yMin - 1].Count; i += 2)
+                    {
+                        if (line[y - yMin - 1][i - 1] != line[y - yMin - 1][i])
+                        {
+                            DrawMyLine(drawArea, pen, new Point[] { new Point(line[y - yMin - 1][i - 1], y), new Point(line[y - yMin - 1][i], y) });
+                        }
+                    }
+                }
+			}
         }
     }
 }
