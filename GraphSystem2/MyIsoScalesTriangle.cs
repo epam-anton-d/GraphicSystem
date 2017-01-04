@@ -7,9 +7,17 @@ using System.Drawing;
 
 namespace GraphSystem2
 {
-    class MyIsoScalesTriangle : MyFigure
+    class MyIsoScalesTriangle : IMyFigure
     {
         private Point[] point;
+
+        public Point[] Point
+        {
+            get
+            {
+                return point;
+            }
+        }
 
         public Point this [int index]
         {
@@ -35,7 +43,7 @@ namespace GraphSystem2
 
         public MyIsoScalesTriangle(Point p1, Point p2, Point p3)
         {
-            point = new Point[] { p1, p2, p3, p1 };
+            point = new Point[] { p1, p2, p3 };
         }
 
         public MyIsoScalesTriangle(Point[] point)

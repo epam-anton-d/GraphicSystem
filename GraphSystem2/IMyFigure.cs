@@ -8,11 +8,16 @@ using System.Drawing;
 
 namespace GraphSystem2
 {
-    internal interface MyFigure
+    internal interface IMyFigure
     {
         Point this[int index]
         {
             set;
+            get;
+        }
+
+        Point[] Point
+        {
             get;
         }
     }

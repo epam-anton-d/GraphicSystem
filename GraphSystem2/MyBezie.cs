@@ -7,9 +7,17 @@ using System.Drawing;
 
 namespace GraphSystem2
 {
-    class MyBezie
+    class MyBezie : IMyFigure
     {
         private Point[] point;
+
+        public Point[] Point
+        {
+            get
+            {
+                return point;
+            }
+        }
 
         public Point this[int index]
         {

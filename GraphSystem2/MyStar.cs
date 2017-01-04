@@ -7,9 +7,26 @@ using System.Drawing;
 
 namespace GraphSystem2
 {
-    class MyStar : MyFigure
+    class MyStar : IMyFigure
     {
         private Point[] point;
+        private int tops;
+
+        public int Tops
+        {
+            get
+            {
+                return tops;
+            }
+        }
+
+        public Point[] Point
+        {
+            get
+            {
+                return point;
+            }
+        }
 
         public Point this [int index]
         {
@@ -33,8 +50,9 @@ namespace GraphSystem2
             }
         }
 
-        public MyStar(Point[] point)
+        public MyStar(Point[] point, int tops)
         {
+            this.tops = tops;
             this.point = point;
         }
     }

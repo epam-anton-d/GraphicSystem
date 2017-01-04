@@ -22,13 +22,16 @@ namespace GraphSystem2
         int pointCounter;
         Pen pen;
         Graphics drawArea;
-
+        List<IMyFigure> figureList;
+        int xMin, xMax, yMin, yMax;
 
         private void Form1_Load(object sender, EventArgs e)
         {
             this.Text = "Графические системы. Вариант №1";
             string[] figures = new string[] { "Линия", "Кривая Безье", "Равнобедренный треугольник", "Звезда" };
-            string[] actions = new string[] { "Нарисовать" };
+            string[] actions = new string[] { "Нарисовать", "Трансформировать" };
+            string[] transform = new string[] { "Удалить" };
+            figureList = new List<IMyFigure>();
             figureChanger.Items.AddRange(figures);
             actionChanger.Items.AddRange(actions);
 
@@ -37,7 +40,6 @@ namespace GraphSystem2
                 starTops.Items.Add(topCounter);
             }
 
-            point = new Point[4];
             pointCounter = 0;
             var colors = new Color[] { Color.Blue, Color.Red, Color.Green };
             figureColor.Items.Clear();
@@ -78,6 +80,7 @@ namespace GraphSystem2
                     switch(pointCounter)
                     {
                         case 0:
+                            point = new Point[2];
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter++;
                             return;
@@ -86,6 +89,7 @@ namespace GraphSystem2
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
                             drawArea = CreateGraphics();
+                            figureList.Add(new MyLine(point));
                             DrawMyLine(drawArea, pen, point);
                             return;
                         default:
@@ -98,6 +102,7 @@ namespace GraphSystem2
                     switch (pointCounter)
                     {
                         case 0:
+                            point = new Point[4];
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter++;
                             return;
@@ -114,6 +119,7 @@ namespace GraphSystem2
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
                             drawArea = CreateGraphics();
+                            figureList.Add(new MyBezie(point));
                             DrawMyBezie(drawArea,pen,point);
                             return;
                         default:
@@ -126,6 +132,7 @@ namespace GraphSystem2
                     switch(pointCounter)
                     {
                         case 0:
+                            point = new Point[4];
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter++;
                             return;
@@ -139,8 +146,8 @@ namespace GraphSystem2
                             pointCounter = 0;
                             drawArea = CreateGraphics();
                             pen = new Pen((Color)figureColor.SelectedItem);
+                            figureList.Add(new MyIsoScalesTriangle(point));
                             DrawMyIsoScalesTriangle(drawArea, point);
-                            
                             return;
                         default:
                             pointCounter = 0;
@@ -152,6 +159,7 @@ namespace GraphSystem2
                     switch(pointCounter)
                     {
                         case 0:
+                            point = new Point[2];
                             point[pointCounter] = new Point(e.X, e.Y);
                             pointCounter++;
                             return;
@@ -160,11 +168,66 @@ namespace GraphSystem2
                             pointCounter = 0;
                             drawArea = CreateGraphics();
                             pen = new Pen((Color)figureColor.SelectedItem);
-                            DrawMyStar(drawArea, pen, point[0], point[1], Convert.ToInt32(starTops.SelectedItem));
+                            figureList.Add(new MyStar(point, Convert.ToInt32(starTops.SelectedItem)));
+                            DrawMyStar(drawArea, pen, point, Convert.ToInt32(starTops.SelectedItem));
                             return;
                         default:
                             pointCounter = 0;
                             return;
+                    }
+                }
+            }
+            else if (actionChanger.SelectedItem == "Трансформировать")
+            {
+                //if (TransformChanger.SelectedItem == "Удалить")
+                //{
+                //    
+                //}
+
+                xMin = int.MaxValue;
+                xMax = int.MinValue;
+                yMin = int.MaxValue;
+                yMax = int.MinValue;
+                
+                foreach (var figure in figureList)
+                {
+                    if (figure is MyStar)
+                    {
+                        point = FindMyStarTops(figure[0], figure[1], (figure as MyStar).Tops);
+                    }
+                    else
+                    {
+                        point = figure.Point;
+                    }
+
+                    if (IsPointInsidePolygon(point, new Point(e.X, e.Y)))
+                    {
+                        foreach (var pt in point)
+                        {
+                            if (pt.X > xMax)
+                            {
+                                xMax = pt.X;
+                            }
+                            if (pt.X < xMin)
+                            {
+                                xMin = pt.X;
+                            }
+                            if (pt.Y > yMax)
+                            {
+                                yMax = pt.Y;
+                            }
+                            if (pt.Y < yMin)
+                            {
+                                yMin = pt.Y;
+                            }
+                        }
+
+                        pen = new Pen(Color.BurlyWood);
+                        drawArea = CreateGraphics();
+                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMin - 3), new Point(xMax + 3, yMin - 3) });
+                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMin - 3), new Point(xMax + 3, yMax + 3) });
+                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMax + 3), new Point(xMin - 3, yMax + 3) });
+                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMax + 3), new Point(xMin - 3, yMin - 3) });
                     }
                 }
             }
@@ -238,6 +301,12 @@ namespace GraphSystem2
             drawArea.DrawRectangle(pen, point.X, point.Y, thickness.SelectedIndex + 1, thickness.SelectedIndex + 1);
         }
 
+        /// <summary>
+        /// Рисует кривую Безье.
+        /// </summary>
+        /// <param name="drawArea"></param>
+        /// <param name="pen"></param>
+        /// <param name="point"></param>
         public void DrawMyBezie(Graphics drawArea, Pen pen, Point[] point)
         {
             Point[] pXY = new Point[100];
@@ -255,6 +324,11 @@ namespace GraphSystem2
             
         }
 
+        /// <summary>
+        /// Рисует равнобедренный треугольник.
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="point"></param>
         public void DrawMyIsoScalesTriangle(Graphics graph, Point[] point)
         {
             int yFant;
@@ -280,7 +354,34 @@ namespace GraphSystem2
             FilUp(drawArea, new Pen((Color)figureColor.SelectedItem), point);
         }
 
-        public void DrawMyStar(Graphics graph, Pen pen, Point center, Point p, int tops)
+        /// <summary>
+        /// Рисует звезду.
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="pen"></param>
+        /// <param name="center"></param>
+        /// <param name="p"></param>
+        /// <param name="tops"></param>
+        public void DrawMyStar(Graphics graph, Pen pen, Point[] point, int tops)
+        {
+            Point[] pt = FindMyStarTops(point[0], point[1], tops);
+
+            for (int i = 1; i < pt.Length; i++)
+            {
+                DrawMyLine(drawArea, pen, new Point[] { pt[i - 1], pt[i] });
+            }
+
+            FilUp(drawArea, new Pen((Color)figureColor.SelectedItem), pt);
+        }
+
+        /// <summary>
+        /// Ищет точки звезды для построения.
+        /// </summary>
+        /// <param name="center"></param>
+        /// <param name="p"></param>
+        /// <param name="tops"></param>
+        /// <returns></returns>
+        public Point[] FindMyStarTops(Point center, Point p, int tops)
         {
             double radius = Math.Sqrt(Math.Pow((center.X - p.X), 2) + Math.Pow((center.Y - p.Y), 2));
             tops *= 2;
@@ -312,20 +413,21 @@ namespace GraphSystem2
 
             point[point.Length - 1] = point[0];
 
-            for (int i = 1; i < point.Length; i++)
-            {
-                DrawMyLine(drawArea, pen, new Point[] { point[i - 1], point[i] });
-            }
-
-            FilUp(drawArea, new Pen((Color)figureColor.SelectedItem), point);
+            return point;
         }
 
+        /// <summary>
+        /// Закрашивает фигуры.
+        /// </summary>
+        /// <param name="drawArea"></param>
+        /// <param name="pen"></param>
+        /// <param name="point"></param>
         public void FilUp(Graphics drawArea, Pen pen, Point[] point)
         {
             int yMin = int.MaxValue,
                 yMax = int.MinValue,
                 x;
-        
+
             for (int i = 0; i < point.Length; i++)
             {
                 if (point[i].Y < yMin)
@@ -338,7 +440,7 @@ namespace GraphSystem2
                 }
             }
         
-            List<int>[] line = new List<int>[yMax - yMin - 1]; // over flow
+            List<int>[] line = new List<int>[yMax - yMin - 1]; // overflow exception
             double[] b = new double[point.Length - 1];
             double[] k = new double[point.Length - 1];
             int dx;
@@ -389,6 +491,49 @@ namespace GraphSystem2
                     }
                 }
 			}
+        }
+
+        bool IsPointInsidePolygon(Point[] point, Point click)
+        {
+            List<int> yCrossingBelow = new List<int>();
+            List<int> yCrossingAbove = new List<int>();
+            int yCrossing;
+            double d;
+
+            // Нулевая и последняя точка?
+            for (int i = 1; i < point.Length; i++)
+            {
+                if (((point[i - 1].X < click.X) && (point[i].X > click.X)) || ((point[i - 1].X > click.X) && (point[i].X < click.X)))
+                {
+                    d = (point[i - 1].Y - point[i].Y) / (point[i - 1].X - point[i].X);
+                    yCrossing = (int)Math.Round(d * click.X + point[i].Y - d * point[i].X);
+                    if (yCrossing > click.Y)
+                    {
+                        yCrossingAbove.Add(yCrossing);
+                    }
+                    else if (yCrossing < click.Y)
+                    {
+                        yCrossingBelow.Add(yCrossing);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            if (yCrossingBelow.Count == 0 && yCrossingAbove.Count == 0)
+            {
+                return false;
+            }
+            else if(yCrossingAbove.Count % 2 != 0 && yCrossingBelow.Count % 2 != 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

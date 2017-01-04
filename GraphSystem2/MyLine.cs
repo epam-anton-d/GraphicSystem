@@ -7,9 +7,17 @@ using System.Drawing;
 
 namespace GraphSystem2
 {
-    class MyLine : MyFigure
+    class MyLine : IMyFigure
     {
         private Point[] point;
+
+        public Point[] Point
+        {
+            get
+            {
+                return point;
+            }
+        }
 
         public Point this [int index]
         {
