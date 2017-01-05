@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
+using System.Threading;
 
 namespace GraphSystem2
 {
@@ -16,6 +17,7 @@ namespace GraphSystem2
         public Form1()
         {
             InitializeComponent();
+            this.KeyPreview = true;
         }
 
         Point[] point;
@@ -24,6 +26,7 @@ namespace GraphSystem2
         Graphics drawArea;
         List<IMyFigure> figureList;
         int xMin, xMax, yMin, yMax;
+        int selectedFigure;
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -34,7 +37,7 @@ namespace GraphSystem2
             figureList = new List<IMyFigure>();
             figureChanger.Items.AddRange(figures);
             actionChanger.Items.AddRange(actions);
-
+            
             for (int topCounter = 3; topCounter < 21; topCounter++)
             {
                 starTops.Items.Add(topCounter);
@@ -56,14 +59,15 @@ namespace GraphSystem2
 
             figureChanger.SelectedIndex = 0;
             actionChanger.SelectedIndex = 0;
-            starTops.SelectedIndex = 0;
+            starTops.SelectedIndex = 2;
             figureColor.SelectedIndex = 0;
             thickness.SelectedIndex = 0;
         }
 
         private void cleanButton_Click(object sender, EventArgs e)
         {
-
+            drawArea.Clear(SystemColors.Control);
+            figureList = new List<IMyFigure>();
         }
 
         private void figureChanger_SelectedIndexChanged(object sender, EventArgs e)
@@ -89,7 +93,7 @@ namespace GraphSystem2
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
                             drawArea = CreateGraphics();
-                            figureList.Add(new MyLine(point));
+                            figureList.Add(new MyLine(pen, point));
                             DrawMyLine(drawArea, pen, point);
                             return;
                         default:
@@ -119,7 +123,7 @@ namespace GraphSystem2
                             pointCounter = 0;
                             pen = new Pen((Color)figureColor.SelectedItem);
                             drawArea = CreateGraphics();
-                            figureList.Add(new MyBezie(point));
+                            figureList.Add(new MyBezie(pen, point));
                             DrawMyBezie(drawArea,pen,point);
                             return;
                         default:
@@ -146,8 +150,8 @@ namespace GraphSystem2
                             pointCounter = 0;
                             drawArea = CreateGraphics();
                             pen = new Pen((Color)figureColor.SelectedItem);
-                            figureList.Add(new MyIsoScalesTriangle(point));
-                            DrawMyIsoScalesTriangle(drawArea, point);
+                            figureList.Add(new MyIsoScalesTriangle(pen, point));
+                            DrawMyIsoScalesTriangle(drawArea, pen, FindMyIsotriangleTops(point));
                             return;
                         default:
                             pointCounter = 0;
@@ -168,7 +172,8 @@ namespace GraphSystem2
                             pointCounter = 0;
                             drawArea = CreateGraphics();
                             pen = new Pen((Color)figureColor.SelectedItem);
-                            figureList.Add(new MyStar(point, Convert.ToInt32(starTops.SelectedItem)));
+                            figureList.Add(new MyStar(pen, point, Convert.ToInt32(starTops.SelectedItem)));
+                            point = FindMyStarTops(point[0], point[1], Convert.ToInt32(starTops.SelectedItem));
                             DrawMyStar(drawArea, pen, point, Convert.ToInt32(starTops.SelectedItem));
                             return;
                         default:
@@ -188,20 +193,37 @@ namespace GraphSystem2
                 xMax = int.MinValue;
                 yMin = int.MaxValue;
                 yMax = int.MinValue;
+                selectedFigure = -1;
+                bool isFigureClicked = false;
                 
                 foreach (var figure in figureList)
                 {
-                    if (figure is MyStar)
+                    if (figure is MyLine)
+                    {
+                        point = figure.Point;
+                        isFigureClicked = IsPointBelongsToLine(point, new Point(e.X, e.Y));
+                    }
+                    else if (figure is MyStar)
                     {
                         point = FindMyStarTops(figure[0], figure[1], (figure as MyStar).Tops);
+                    }
+                    else if (figure is MyIsoScalesTriangle)
+                    {
+                        point = FindMyIsotriangleTops(figure.Point);
                     }
                     else
                     {
                         point = figure.Point;
                     }
 
-                    if (IsPointInsidePolygon(point, new Point(e.X, e.Y)))
+                    selectedFigure++;
+
+                    //isFigureClicked = IsPointInsidePolygon(point, new Point(e.X, e.Y));
+
+                    if (isFigureClicked)
                     {
+                        Refresh(drawArea, figureList);
+
                         foreach (var pt in point)
                         {
                             if (pt.X > xMax)
@@ -228,8 +250,17 @@ namespace GraphSystem2
                         DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMin - 3), new Point(xMax + 3, yMax + 3) });
                         DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMax + 3), new Point(xMin - 3, yMax + 3) });
                         DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMax + 3), new Point(xMin - 3, yMin - 3) });
+
+                        break;
                     }
+
                 }
+
+                if (!isFigureClicked)
+                {
+                    selectedFigure = -1;
+                }
+
             }
         }
 
@@ -329,7 +360,17 @@ namespace GraphSystem2
         /// </summary>
         /// <param name="graph"></param>
         /// <param name="point"></param>
-        public void DrawMyIsoScalesTriangle(Graphics graph, Point[] point)
+        public void DrawMyIsoScalesTriangle(Graphics graph, Pen pen, Point[] point)
+        {
+            for (int i = 1; i < point.Length; i++)
+            {
+                DrawMyLine(drawArea, pen, new Point[] { point[i - 1], point[i] });
+            }
+
+            FilUp(drawArea, pen, point);
+        }
+
+        public Point[] FindMyIsotriangleTops(Point[] point)
         {
             int yFant;
             int xFant;
@@ -346,12 +387,7 @@ namespace GraphSystem2
                 point[2].Y = yFant;
             }
 
-            for (int i = 1; i < point.Length; i++)
-            {
-                DrawMyLine(drawArea, pen, new Point[] { point[i - 1], point[i] });
-            }
-
-            FilUp(drawArea, new Pen((Color)figureColor.SelectedItem), point);
+            return point;
         }
 
         /// <summary>
@@ -364,14 +400,12 @@ namespace GraphSystem2
         /// <param name="tops"></param>
         public void DrawMyStar(Graphics graph, Pen pen, Point[] point, int tops)
         {
-            Point[] pt = FindMyStarTops(point[0], point[1], tops);
-
-            for (int i = 1; i < pt.Length; i++)
+            for (int i = 1; i < point.Length; i++)
             {
-                DrawMyLine(drawArea, pen, new Point[] { pt[i - 1], pt[i] });
+                DrawMyLine(drawArea, pen, new Point[] { point[i - 1], point[i] });
             }
 
-            FilUp(drawArea, new Pen((Color)figureColor.SelectedItem), pt);
+            FilUp(drawArea, pen, point);
         }
 
         /// <summary>
@@ -530,10 +564,80 @@ namespace GraphSystem2
             {
                 return true;
             }
+            else if ((yCrossingAbove.Count % 2 == 0 && yCrossingBelow.Count % 2 != 0) || (yCrossingAbove.Count % 2 != 0 && yCrossingBelow.Count % 2 == 0))
+            {
+                return true;
+            }
             else
             {
                 return false;
             }
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (selectedFigure != -1 && e.KeyCode == Keys.Delete)
+            {
+                figureList.RemoveAt(selectedFigure);
+                Refresh(drawArea, figureList);
+            }
+        }
+
+        private void Refresh(Graphics drawArea, List<IMyFigure> figureList)
+        {
+            drawArea.Clear(SystemColors.Control);
+
+            foreach (var fig in figureList)
+            {
+                if (fig is MyLine)
+                {
+                    DrawMyLine(drawArea, fig.PenOfThis, fig.Point);
+                }
+                else if (fig is MyBezie)
+                {
+                    DrawMyBezie(drawArea, fig.PenOfThis, fig.Point);
+                }
+                else if (fig is MyIsoScalesTriangle)
+                {
+                    DrawMyIsoScalesTriangle(drawArea, fig.PenOfThis, FindMyIsotriangleTops(fig.Point));
+                }
+                else if (fig is MyStar)
+                {
+                    DrawMyStar(drawArea, fig.PenOfThis, FindMyStarTops(fig[0], fig[1], (fig as MyStar).Tops), (fig as MyStar).Tops);
+                }
+                else
+                {
+                    throw new Exception("Unnown figure");
+                }
+            }
+        }
+
+        private bool IsPointBelongsToLine(Point[] point, Point click)
+        {
+            if (point.Length != 2)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
+            double dx = point[0].X - point[1].X;
+            dx = (dx == 0) ? 1 : dx;
+            double k = (point[0].Y - point[1].Y) / dx;
+            double b = point[1].Y - k * point[1].X;
+            double y;
+
+            if (((point[0].X + 10 > click.X) && (point[1].X - 10 < click.X)) || ((point[0].X - 10 < click.X) && (point[1].X + 10 > click.X)))
+            {
+                for (int i = -3; i < 3; i++)
+                {
+                    y = k * (click.X + i) + b;
+                    if (Math.Abs(y - click.Y) < 10)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

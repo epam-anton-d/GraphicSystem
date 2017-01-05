@@ -10,6 +10,15 @@ namespace GraphSystem2
     class MyIsoScalesTriangle : IMyFigure
     {
         private Point[] point;
+        private Pen pen;
+
+        public Pen PenOfThis
+        {
+            get
+            {
+                return pen;
+            }
+        }
 
         public Point[] Point
         {
@@ -28,7 +37,7 @@ namespace GraphSystem2
                     point[index] = value;
                 }
                 else
-                    throw new NotImplementedException();
+                    throw new IndexOutOfRangeException();
             }
             get
             {
@@ -37,17 +46,19 @@ namespace GraphSystem2
                     return point[index];
                 }
                 else
-                    throw new NotImplementedException();
+                    throw new IndexOutOfRangeException();
             }
         }
 
-        public MyIsoScalesTriangle(Point p1, Point p2, Point p3)
+        public MyIsoScalesTriangle(Pen pen, Point p1, Point p2, Point p3)
         {
+            this.pen = pen;
             point = new Point[] { p1, p2, p3 };
         }
 
-        public MyIsoScalesTriangle(Point[] point)
+        public MyIsoScalesTriangle(Pen pen, Point[] point)
         {
+            this.pen = pen;
             this.point = point;
         }
     }

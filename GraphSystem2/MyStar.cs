@@ -11,6 +11,15 @@ namespace GraphSystem2
     {
         private Point[] point;
         private int tops;
+        private Pen pen;
+
+        public Pen PenOfThis
+        {
+            get
+            {
+                return pen;
+            }
+        }
 
         public int Tops
         {
@@ -37,7 +46,7 @@ namespace GraphSystem2
                     point[index] = value;
                 }
                 else
-                    throw new Exception("Out of range index array");
+                    throw new IndexOutOfRangeException();
             }
             get
             {
@@ -46,12 +55,13 @@ namespace GraphSystem2
                     return point[index];
                 }
                 else
-                    throw new Exception("Out of range index array");
+                    throw new IndexOutOfRangeException();
             }
         }
 
-        public MyStar(Point[] point, int tops)
+        public MyStar(Pen pen, Point[] point, int tops)
         {
+            this.pen = pen;
             this.tops = tops;
             this.point = point;
         }
