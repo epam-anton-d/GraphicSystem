@@ -203,22 +203,23 @@ namespace GraphSystem2
                         point = figure.Point;
                         isFigureClicked = IsPointBelongsToLine(point, new Point(e.X, e.Y));
                     }
+                    else if (figure is MyBezie)
+                    {
+                        point = figure.Point;
+                        isFigureClicked = IsPointBelongsToBezie(point, new Point(e.X, e.Y));
+                    }
                     else if (figure is MyStar)
                     {
                         point = FindMyStarTops(figure[0], figure[1], (figure as MyStar).Tops);
+                        isFigureClicked = IsPointInsidePolygon(point, new Point(e.X, e.Y));
                     }
                     else if (figure is MyIsoScalesTriangle)
                     {
                         point = FindMyIsotriangleTops(figure.Point);
+                        isFigureClicked = IsPointInsidePolygon(point, new Point(e.X, e.Y));
                     }
-                    else
-                    {
-                        point = figure.Point;
-                    }
-
+                    
                     selectedFigure++;
-
-                    //isFigureClicked = IsPointInsidePolygon(point, new Point(e.X, e.Y));
 
                     if (isFigureClicked)
                     {
@@ -259,6 +260,7 @@ namespace GraphSystem2
                 if (!isFigureClicked)
                 {
                     selectedFigure = -1;
+                    Refresh(drawArea, figureList);
                 }
 
             }
@@ -634,6 +636,25 @@ namespace GraphSystem2
                     {
                         return true;
                     }
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsPointBelongsToBezie(Point[] point, Point click)
+        {
+            Point[] pXY = new Point[100];
+
+            double del = 0.01;
+            for (int t = 0; t < 100; t++)
+            {
+                pXY[t].X = (int)Math.Round(Math.Pow((1 - t * del), 3) * point[0].X + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].X + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].X + t * t * t * Math.Pow(del, 3) * point[3].X);
+                pXY[t].Y = (int)Math.Round(Math.Pow((1 - t * del), 3) * point[0].Y + 3 * Math.Pow((1 - t * del), 2) * t * del * point[1].Y + 3 * (1 - t * del) * Math.Pow((t * del), 2) * point[2].Y + t * t * t * Math.Pow(del, 3) * point[3].Y);
+
+                if (Math.Abs(pXY[t].X - click.X) < 10 && Math.Abs(pXY[t].Y - click.Y) < 10)
+                {
+                    return true;
                 }
             }
 
