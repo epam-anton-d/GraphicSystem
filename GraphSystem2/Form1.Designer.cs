@@ -44,7 +44,6 @@
             this.figureChanger.Name = "figureChanger";
             this.figureChanger.Size = new System.Drawing.Size(136, 134);
             this.figureChanger.TabIndex = 0;
-            this.figureChanger.SelectedIndexChanged += new System.EventHandler(this.figureChanger_SelectedIndexChanged);
             // 
             // cleanButton
             // 

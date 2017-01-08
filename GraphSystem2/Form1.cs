@@ -26,7 +26,8 @@ namespace GraphSystem2
         Graphics drawArea;
         List<IMyFigure> figureList;
         int xMin, xMax, yMin, yMax;
-        int selectedFigure;
+        int firstSelectedFigure,
+            secondSelectedFigure;
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -182,93 +183,22 @@ namespace GraphSystem2
                     }
                 }
             }
-            else if (actionChanger.SelectedItem == "Трансформировать")
+            else if (actionChanger.SelectedItem == "Трансформировать" && Form1.ModifierKeys != Keys.Shift)
             {
-                //if (TransformChanger.SelectedItem == "Удалить")
-                //{
-                //    
-                //}
+                //
+                //
+                //
+                //
+                //
+                firstSelectedFigure = SelectFigure(new Point(e.X, e.Y), figureList, drawArea, false, firstSelectedFigure);
 
-                xMin = int.MaxValue;
-                xMax = int.MinValue;
-                yMin = int.MaxValue;
-                yMax = int.MinValue;
-                selectedFigure = -1;
-                bool isFigureClicked = false;
                 
-                foreach (var figure in figureList)
-                {
-                    if (figure is MyLine)
-                    {
-                        point = figure.Point;
-                        isFigureClicked = IsPointBelongsToLine(point, new Point(e.X, e.Y));
-                    }
-                    else if (figure is MyBezie)
-                    {
-                        point = figure.Point;
-                        isFigureClicked = IsPointBelongsToBezie(point, new Point(e.X, e.Y));
-                    }
-                    else if (figure is MyStar)
-                    {
-                        point = FindMyStarTops(figure[0], figure[1], (figure as MyStar).Tops);
-                        isFigureClicked = IsPointInsidePolygon(point, new Point(e.X, e.Y));
-                    }
-                    else if (figure is MyIsoScalesTriangle)
-                    {
-                        point = FindMyIsotriangleTops(figure.Point);
-                        isFigureClicked = IsPointInsidePolygon(point, new Point(e.X, e.Y));
-                    }
-                    
-                    selectedFigure++;
-
-                    if (isFigureClicked)
-                    {
-                        Refresh(drawArea, figureList);
-
-                        foreach (var pt in point)
-                        {
-                            if (pt.X > xMax)
-                            {
-                                xMax = pt.X;
-                            }
-                            if (pt.X < xMin)
-                            {
-                                xMin = pt.X;
-                            }
-                            if (pt.Y > yMax)
-                            {
-                                yMax = pt.Y;
-                            }
-                            if (pt.Y < yMin)
-                            {
-                                yMin = pt.Y;
-                            }
-                        }
-
-                        pen = new Pen(Color.BurlyWood);
-                        drawArea = CreateGraphics();
-                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMin - 3), new Point(xMax + 3, yMin - 3) });
-                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMin - 3), new Point(xMax + 3, yMax + 3) });
-                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMax + 3), new Point(xMin - 3, yMax + 3) });
-                        DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMax + 3), new Point(xMin - 3, yMin - 3) });
-
-                        break;
-                    }
-
-                }
-
-                if (!isFigureClicked)
-                {
-                    selectedFigure = -1;
-                    Refresh(drawArea, figureList);
-                }
-
             }
-        }
-
-        private void figureColor_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
+            else if (actionChanger.SelectedItem == "Трансформировать" && firstSelectedFigure != -1 && Form1.ModifierKeys == Keys.Shift)
+            {
+                secondSelectedFigure = SelectFigure(new Point(e.X, e.Y), figureList, drawArea, true, firstSelectedFigure);
+                //MessageBox.Show("Test");
+            }
         }
 
         public void DrawMyLine(Graphics drawArea, Pen pen, Point[] point)
@@ -578,11 +508,17 @@ namespace GraphSystem2
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (selectedFigure != -1 && e.KeyCode == Keys.Delete)
+            if (firstSelectedFigure != -1 && e.KeyCode == Keys.Delete)
             {
-                figureList.RemoveAt(selectedFigure);
+                figureList.RemoveAt(firstSelectedFigure);
                 Refresh(drawArea, figureList);
             }
+
+            //if (selectedFigure != -1 && e.Shift && Form1.MouseButtons == System.Windows.Forms.MouseButtons.Left)
+            //{
+            //    //MessageBox.Show("Test");
+            //    secondSelectedFigure = SelectFigure(click, )
+            //}
         }
 
         private void Refresh(Graphics drawArea, List<IMyFigure> figureList)
@@ -611,6 +547,7 @@ namespace GraphSystem2
                 {
                     throw new Exception("Unnown figure");
                 }
+
             }
         }
 
@@ -659,6 +596,139 @@ namespace GraphSystem2
             }
 
             return false;
+        }
+
+        private int SelectFigure(Point click, List<IMyFigure> figureList, Graphics drawArea, bool isShiftDown, int firstSelectedFigure)
+        {
+            
+            int selectedFigure = -1;
+            bool isFigureClicked = false;
+            Point[] point = null;
+
+            foreach (var figure in figureList)
+            {
+                if (figure is MyLine)
+                {
+                    point = figure.Point;
+                    isFigureClicked = IsPointBelongsToLine(point, click);
+                }
+                else if (figure is MyBezie)
+                {
+                    point = figure.Point;
+                    isFigureClicked = IsPointBelongsToBezie(point, click);
+                }
+                else if (figure is MyStar)
+                {
+                    point = FindMyStarTops(figure[0], figure[1], (figure as MyStar).Tops);
+                    isFigureClicked = IsPointInsidePolygon(point, click);
+                }
+                else if (figure is MyIsoScalesTriangle)
+                {
+                    point = FindMyIsotriangleTops(figure.Point);
+                    isFigureClicked = IsPointInsidePolygon(point, click);
+                }
+
+                selectedFigure++;
+
+                if (isFigureClicked)
+                {
+                    Refresh(drawArea, figureList);
+                    if (isShiftDown)
+                    {
+                        DrawSelection(drawArea, pen, figureList[firstSelectedFigure].Point);
+                    }
+                    DrawSelection(drawArea, pen, point);
+                    break;
+                }
+            }
+
+            if (!isFigureClicked)
+            {
+                selectedFigure = -1;
+                Refresh(drawArea, figureList);
+            }
+
+            return selectedFigure;
+        }
+
+        private void DrawSelection(Graphics drawArea, Pen pen, Point[] point)
+        {
+            int xMin = int.MaxValue,
+                xMax = int.MinValue,
+                yMin = int.MaxValue,
+                yMax = int.MinValue;
+
+            foreach (var pt in point)
+            {
+                if (pt.X > xMax)
+                {
+                    xMax = pt.X;
+                }
+                if (pt.X < xMin)
+                {
+                    xMin = pt.X;
+                }
+                if (pt.Y > yMax)
+                {
+                    yMax = pt.Y;
+                }
+                if (pt.Y < yMin)
+                {
+                    yMin = pt.Y;
+                }
+            }
+
+            pen = new Pen(Color.BurlyWood);
+            drawArea = CreateGraphics();
+            DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMin - 3), new Point(xMax + 3, yMin - 3) });
+            DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMin - 3), new Point(xMax + 3, yMax + 3) });
+            DrawMyLine(drawArea, pen, new Point[] { new Point(xMax + 3, yMax + 3), new Point(xMin - 3, yMax + 3) });
+            DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMax + 3), new Point(xMin - 3, yMin - 3) });
+        }
+
+        private void CrossFigures(Graphics drawArea, List<IMyFigure> figureList, int firstSelectedFigure, int secondSelectedFigure)
+        {
+            int xMin = int.MaxValue,
+                xMax = int.MinValue,
+                yMin = int.MaxValue,
+                yMax = int.MinValue;
+
+            if ((firstSelectedFigure | secondSelectedFigure) == -1 && ((figureList[firstSelectedFigure] is MyIsoScalesTriangle) | (figureList[firstSelectedFigure] is MyStar)) && ((figureList[secondSelectedFigure] is MyIsoScalesTriangle) | (figureList[secondSelectedFigure] is MyStar)))
+            {
+                return;
+            }
+
+            for (int i = 0; i < figureList[firstSelectedFigure].Point.Length; i++)
+            {
+                MinMaxFind(figureList[firstSelectedFigure].Point[i], ref xMin, ref xMax, ref yMin, ref yMax);
+            }
+            
+
+        }
+
+        private void MinMaxFind(Point variable, ref int xMin, ref int xMax, ref int yMin, ref int yMax)
+        {
+            if (variable.X < xMin)
+            {
+                xMin = variable.X;
+            }
+            if (variable.X > xMax)
+            {
+                xMax = variable.X;
+            }
+            if (variable.Y < yMin)
+            {
+                yMin = variable.Y;
+            }
+            if (variable.Y > yMax)
+            {
+                yMax = variable.Y;
+            }
+        }
+
+        private void figureColor_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Don't delete!!!
         }
     }
 }
