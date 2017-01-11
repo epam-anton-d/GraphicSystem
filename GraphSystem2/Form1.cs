@@ -459,44 +459,44 @@ namespace GraphSystem2
 			}
         }
 
-        bool IsPointInsidePolygon(Point[] point, Point click)
+        private bool IsPointInsidePolygon(Point[] point, Point click)
         {
-            List<int> yCrossingBelow = new List<int>();
-            List<int> yCrossingAbove = new List<int>();
-            int yCrossing;
-            double d;
+            double yCrossing,
+                   xCrossing;
+            int yCrossingBelow = 0,
+                yCrossingAbove = 0,
+                xCrossingLeft = 0,
+                xCrossingRight = 0;
 
-            // Нулевая и последняя точка?
             for (int i = 1; i < point.Length; i++)
             {
-                if (((point[i - 1].X < click.X) && (point[i].X > click.X)) || ((point[i - 1].X > click.X) && (point[i].X < click.X)))
+                if (((point[i].X > click.X) && (point[i - 1].X < click.X)) || ((point[i].X < click.X) && (point[i - 1].X > click.X)))
                 {
-                    d = (point[i - 1].Y - point[i].Y) / (point[i - 1].X - point[i].X);
-                    yCrossing = (int)Math.Round(d * click.X + point[i].Y - d * point[i].X);
+                    yCrossing = ((point[i].Y - point[i - 1].Y) * (click.X - point[i - 1].X) / (point[i].X - point[i - 1].X)) + point[i - 1].Y;
                     if (yCrossing > click.Y)
                     {
-                        yCrossingAbove.Add(yCrossing);
-                    }
-                    else if (yCrossing < click.Y)
-                    {
-                        yCrossingBelow.Add(yCrossing);
+                        yCrossingAbove++;
                     }
                     else
                     {
-                        return false;
+                        yCrossingBelow++;
+                    }
+                }
+                if (((point[i].Y > click.Y) && (point[i - 1].Y < click.Y)) || ((point[i].Y < click.Y) && (point[i - 1].Y > click.Y)))
+                {
+                    xCrossing = (click.Y - point[i - 1].Y) * (point[i].X - point[i - 1].X) / (point[i].Y - point[i - 1].Y) + point[i - 1].X;
+                    if (xCrossing > click.X)
+                    {
+                        xCrossingRight++;
+                    }
+                    else
+                    {
+                        xCrossingLeft++;
                     }
                 }
             }
 
-            if (yCrossingBelow.Count == 0 && yCrossingAbove.Count == 0)
-            {
-                return false;
-            }
-            else if(yCrossingAbove.Count % 2 != 0 && yCrossingBelow.Count % 2 != 0)
-            {
-                return true;
-            }
-            else if ((yCrossingAbove.Count % 2 == 0 && yCrossingBelow.Count % 2 != 0) || (yCrossingAbove.Count % 2 != 0 && yCrossingBelow.Count % 2 == 0))
+            if ((xCrossingLeft % 2 != 0) && (xCrossingRight % 2 != 0) && (yCrossingAbove % 2 != 0) && (yCrossingBelow % 2 != 0))
             {
                 return true;
             }
@@ -505,6 +505,53 @@ namespace GraphSystem2
                 return false;
             }
         }
+
+        //bool IsPointInsidePolygon(Point[] point, Point click)
+        //{
+        //    List<int> yCrossingBelow = new List<int>();
+        //    List<int> yCrossingAbove = new List<int>();
+        //    int yCrossing;
+        //    double d;
+        //
+        //    // Нулевая и последняя точка?
+        //    for (int i = 1; i < point.Length; i++)
+        //    {
+        //        if (((point[i - 1].X < click.X) && (point[i].X > click.X)) || ((point[i - 1].X > click.X) && (point[i].X < click.X)))
+        //        {
+        //            d = (point[i - 1].Y - point[i].Y) / (point[i - 1].X - point[i].X);
+        //            yCrossing = (int)Math.Round(d * click.X + point[i].Y - d * point[i].X);
+        //            if (yCrossing > click.Y)
+        //            {
+        //                yCrossingAbove.Add(yCrossing);
+        //            }
+        //            else if (yCrossing < click.Y)
+        //            {
+        //                yCrossingBelow.Add(yCrossing);
+        //            }
+        //            else
+        //            {
+        //                return false;
+        //            }
+        //        }
+        //    }
+        //
+        //    if (yCrossingBelow.Count == 0 && yCrossingAbove.Count == 0)
+        //    {
+        //        return false;
+        //    }
+        //    else if (yCrossingAbove.Count % 2 != 0 && yCrossingBelow.Count % 2 != 0)
+        //    {
+        //        return true;
+        //    }
+        //    else if ((yCrossingAbove.Count % 2 == 0 && yCrossingBelow.Count % 2 != 0) || (yCrossingAbove.Count % 2 != 0 && yCrossingBelow.Count % 2 == 0))
+        //    {
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        return false;
+        //    }
+        //}
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
@@ -686,24 +733,74 @@ namespace GraphSystem2
             DrawMyLine(drawArea, pen, new Point[] { new Point(xMin - 3, yMax + 3), new Point(xMin - 3, yMin - 3) });
         }
 
-        private void CrossFigures(Graphics drawArea, List<IMyFigure> figureList, int firstSelectedFigure, int secondSelectedFigure)
+        private List<IMyFigure> CrossFigures(Graphics drawArea, List<IMyFigure> figureList, int firstSelectedFigure, int secondSelectedFigure)
         {
-            int xMin = int.MaxValue,
-                xMax = int.MinValue,
-                yMin = int.MaxValue,
-                yMax = int.MinValue;
+            List<Point> crossFigure = new List<Point>();
+            //crossFigure.Add( new List<Point>());
+            //crossFigure[0] = new List<Point>();
+            Point crossPoint;
 
-            if ((firstSelectedFigure | secondSelectedFigure) == -1 && ((figureList[firstSelectedFigure] is MyIsoScalesTriangle) | (figureList[firstSelectedFigure] is MyStar)) && ((figureList[secondSelectedFigure] is MyIsoScalesTriangle) | (figureList[secondSelectedFigure] is MyStar)))
+            for (int i = 1; i < figureList[firstSelectedFigure].Point.Length; i++)
             {
-                return;
+                for (int j = 1; j < figureList[secondSelectedFigure].Point.Length; j++)
+                {
+                    crossPoint = TwoLinesCrossPoint(new Point[] { figureList[firstSelectedFigure].Point[i], figureList[firstSelectedFigure].Point[i - 1] }, new Point[] { figureList[secondSelectedFigure].Point[j], figureList[secondSelectedFigure].Point[j - 1] });
+                    if ((crossPoint.X != 0) && (crossPoint.Y != 0))
+                    {
+                        crossFigure.Add(crossPoint);
+                    }
+                }
             }
-
             for (int i = 0; i < figureList[firstSelectedFigure].Point.Length; i++)
             {
-                MinMaxFind(figureList[firstSelectedFigure].Point[i], ref xMin, ref xMax, ref yMin, ref yMax);
+                if (IsPointInsidePolygon(figureList[secondSelectedFigure].Point, figureList[firstSelectedFigure].Point[i]))
+                {
+                    crossFigure.Insert(1, figureList[firstSelectedFigure].Point[i]);
+                }
             }
-            
+            for (int i = 0; i < figureList[secondSelectedFigure].Point.Length; i++)
+            {
+                if (IsPointInsidePolygon(figureList[firstSelectedFigure].Point, figureList[secondSelectedFigure].Point[i]))
+                {
+                    crossFigure.Add(figureList[secondSelectedFigure].Point[i]);
+                }
+            }
+            figureList.Add(new MyPolygon(figureList[firstSelectedFigure].PenOfThis, crossFigure.ToArray()));
+            if (firstSelectedFigure > secondSelectedFigure)
+            {
+                figureList.RemoveAt(firstSelectedFigure);
+                figureList.RemoveAt(secondSelectedFigure);
+            }
+            else
+            {
+                figureList.RemoveAt(secondSelectedFigure);
+                figureList.RemoveAt(firstSelectedFigure);
+            }
+            return figureList; 
+        }
 
+        private Point TwoLinesCrossPoint(Point[] line1, Point[] line2)
+        {
+            double k1, 
+                   k2,
+                   b1,
+                   b2;
+            Point cross = new Point();
+
+            k1 = (line1[1].Y - line1[0].Y) / (line1[1].X - line1[0].X);
+            b1 = line1[0].Y - k1 * line1[0].X;
+            k2 = (line2[1].Y - line2[0].Y) / (line2[1].X - line2[0].X);
+            b2 = line2[0].Y - k1 * line2[0].X;
+            cross.X = (int)Math.Round((b2 - b1) / (k1 - k2));
+            cross.Y = (int)Math.Round(k1 * cross.X + b1);
+            if ((((cross.X <= line1[0].X) && (cross.X >= line1[1].X)) || ((cross.X >= line1[0].X) && (cross.X <= line1[1].X))) && (((cross.Y <= line1[0].Y) && (cross.Y >= line1[1].Y)) || ((cross.Y >= line1[0].Y) && (cross.Y <= line1[1].Y))))
+            {
+                return cross;
+            }
+            else
+            {
+                return new Point(0, 0);
+            }
         }
 
         private void MinMaxFind(Point variable, ref int xMin, ref int xMax, ref int yMin, ref int yMax)

@@ -54,6 +54,7 @@
     </Compile>
     <Compile Include="MyIsoScalesTriangle.cs" />
     <Compile Include="MyLine.cs" />
+    <Compile Include="MyPolygon.cs" />
     <Compile Include="MyStar.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
